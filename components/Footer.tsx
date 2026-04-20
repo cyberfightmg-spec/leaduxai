@@ -48,7 +48,7 @@ export function Footer() {
               viewport={{ once: true }}
             >
               <h3 className="text-2xl font-bold gradient-text mb-4">
-                LeaduxAI.id
+                leaduxAI
               </h3>
               <p className="text-muted-foreground text-sm mb-6 max-w-xs">
                 AI-powered Pinterest automation platform. Создавайте, оптимизируйте и публикуйте контент в один клик.

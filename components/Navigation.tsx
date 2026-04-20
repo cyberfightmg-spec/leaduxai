@@ -51,8 +51,8 @@ export function Navigation() {
               <div className="w-8 h-8 rounded-lg gradient-bg flex items-center justify-center">
                 <Sparkles className="w-5 h-5 text-white" />
               </div>
-              <span className="font-bold text-xl hidden sm:block">
-                LeaduxAI<span className="gradient-text">.id</span>
+              <span className="font-bold text-xl hidden sm:block gradient-text">
+                leaduxAI
               </span>
             </a>
 
@@ -77,7 +77,7 @@ export function Navigation() {
                 onClick={() => scrollToSection("#demo")}
                 className="hidden sm:flex px-5 py-2 rounded-full gradient-bg text-white text-sm font-medium hover:shadow-lg transition-shadow"
               >
-                Try Free
+                Попробовать бесплатно
               </button>
 
               {/* Mobile menu button */}
