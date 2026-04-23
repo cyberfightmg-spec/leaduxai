@@ -8,6 +8,7 @@ import { Upload, Download, Type, Image as ImageIcon, Wand2 } from "lucide-react"
 interface PinFormData {
   title: string;
   description: string;
+  prompt: string;
 }
 
 interface PinCanvasProps {
@@ -21,19 +22,24 @@ export function PinCanvas({ className }: PinCanvasProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
 
+  const [promptMode, setPromptMode] = useState(false);
+
   const {
     register,
     watch,
+    setValue,
     formState: { errors },
   } = useForm<PinFormData>({
     defaultValues: {
       title: "Amazing Pinterest Pin",
       description: "Created with LeaduxAI",
+      prompt: "",
     },
   });
 
   const title = watch("title");
   const description = watch("description");
+  const prompt = watch("prompt");
 
   const handleFileUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -47,6 +53,8 @@ export function PinCanvas({ className }: PinCanvasProps) {
   }, []);
 
   const generateAIBackground = useCallback(async () => {
+    if (!prompt && promptMode) return;
+    
     setIsGenerating(true);
     await new Promise((resolve) => setTimeout(resolve, 1500));
     
@@ -56,26 +64,52 @@ export function PinCanvas({ className }: PinCanvasProps) {
     const ctx = canvas.getContext("2d");
     
     if (ctx) {
-      ctx.fillStyle = "#1a1a1a";
-      ctx.fillRect(0, 0, 600, 900);
-      
-      ctx.fillStyle = "rgba(255,255,255,0.05)";
-      for (let i = 0; i < 20; i++) {
-        ctx.beginPath();
-        ctx.arc(
-          Math.random() * 600,
-          Math.random() * 900,
-          Math.random() * 100 + 50,
-          0,
-          Math.PI * 2
-        );
-        ctx.fill();
+      if (prompt && promptMode) {
+        ctx.fillStyle = "#2a2a2a";
+        ctx.fillRect(0, 0, 600, 900);
+        
+        ctx.fillStyle = "rgba(255,255,255,0.08)";
+        ctx.font = "24px sans-serif";
+        ctx.textAlign = "center";
+        const words = prompt.split(" ");
+        let line = "";
+        let y = 450;
+        const maxWidth = 500;
+        
+        for (let n = 0; n < words.length; n++) {
+          const testLine = line + words[n] + " ";
+          const metrics = ctx.measureText(testLine);
+          if (metrics.width > maxWidth && n > 0) {
+            ctx.fillText(line, 300, y);
+            line = words[n] + " ";
+            y += 35;
+          } else {
+            line = testLine;
+          }
+        }
+        ctx.fillText(line, 300, y);
+      } else {
+        ctx.fillStyle = "#1a1a1a";
+        ctx.fillRect(0, 0, 600, 900);
+        
+        ctx.fillStyle = "rgba(255,255,255,0.05)";
+        for (let i = 0; i < 20; i++) {
+          ctx.beginPath();
+          ctx.arc(
+            Math.random() * 600,
+            Math.random() * 900,
+            Math.random() * 100 + 50,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+        }
       }
     }
     
     setUploadedImage(canvas.toDataURL());
     setIsGenerating(false);
-  }, []);
+  }, [prompt, promptMode]);
 
   const downloadPin = useCallback(async () => {
     if (!pinRef.current) return;
@@ -118,19 +152,29 @@ export function PinCanvas({ className }: PinCanvasProps) {
                 className="flex-1 flex items-center justify-center gap-2 px-4 py-3 border border-[hsl(var(--border))] hover:bg-[hsl(var(--accent))] transition-colors"
               >
                 <Upload className="w-5 h-5" />
-                <span className="text-sm">Upload Image</span>
+                <span className="text-sm">Upload</span>
               </button>
               <button
-                onClick={generateAIBackground}
+                onClick={() => {
+                  if (promptMode && prompt) {
+                    generateAIBackground();
+                  } else {
+                    setPromptMode(!promptMode);
+                  }
+                }}
                 disabled={isGenerating}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-[hsl(var(--foreground))] text-[hsl(var(--background))] disabled:opacity-50 transition-opacity"
+                className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 border transition-colors ${
+                  promptMode 
+                    ? "bg-[hsl(var(--foreground))] text-[hsl(var(--background))]" 
+                    : "border-[hsl(var(--border))] hover:bg-[hsl(var(--accent))]"
+                } disabled:opacity-50`}
               >
                 {isGenerating ? (
                   <Wand2 className="w-5 h-5 animate-spin" />
                 ) : (
                   <Wand2 className="w-5 h-5" />
                 )}
-                <span className="text-sm">AI Generate</span>
+                <span className="text-sm">{promptMode ? "Generate" : "AI"}</span>
               </button>
             </div>
             <input
@@ -141,6 +185,21 @@ export function PinCanvas({ className }: PinCanvasProps) {
               className="hidden"
             />
           </div>
+
+          {promptMode && (
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-[hsl(var(--muted-foreground))] flex items-center gap-2">
+                <Wand2 className="w-4 h-4" />
+                AI Prompt
+              </label>
+              <textarea
+                {...register("prompt")}
+                rows={3}
+                className="w-full px-4 py-3 bg-[hsl(var(--background))] border border-[hsl(var(--border))] outline-none transition-all resize-none"
+                placeholder="Describe the image you want to generate..."
+              />
+            </div>
+          )}
 
           <div className="space-y-2">
             <label className="text-sm font-medium text-[hsl(var(--muted-foreground))] flex items-center gap-2">
